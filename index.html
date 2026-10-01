@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SmartFriend</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F6F7FB;--card:#fff;--ink:#1B2350;--mut:#667;--pri:#2B3A8C;--acc:#F5A524;--ok:#1F9D6B;--ko:#D9482B;--line:#E2E5F0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1330;--card:#181D45;--ink:#EEF0FF;--mut:#A3A8D0;--pri:#8EA0FF;--line:#2A3066}}
+:root[data-theme="dark"]{--bg:#0F1330;--card:#181D45;--ink:#EEF0FF;--mut:#A3A8D0;--pri:#8EA0FF;--line:#2A3066}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;line-height:1.5}
+#app{max-width:640px;margin:0 auto;padding:16px 16px 96px}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.logo{font-weight:800;font-size:26px;letter-spacing:-.5px}.logo b{color:var(--acc)}
+h2{font-size:20px;margin:18px 0 8px}h3{margin:0 0 4px;font-size:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:10px 0}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.sp{justify-content:space-between}
+.mut{color:var(--mut);font-size:14px}
+button,select,input,textarea{font:inherit;color:var(--ink)}
+button{border:0;border-radius:10px;padding:10px 14px;background:var(--pri);color:#fff;font-weight:700;cursor:pointer}
+button.g{background:transparent;color:var(--pri);border:1px solid var(--line)}
+button.o{background:var(--acc);color:#1B2350}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+select,input,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--card)}
+.opt{display:block;width:100%;text-align:left;margin:6px 0;background:var(--card);color:var(--ink);border:1.5px solid var(--line)}
+.opt.ok{border-color:var(--ok);background:rgba(31,157,107,.15)}.opt.ko{border-color:var(--ko);background:rgba(217,72,43,.15)}
+nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav div{display:flex;max-width:640px;width:100%}
+nav button{flex:1;background:none;color:var(--mut);border-radius:0;padding:10px 2px;font-size:12px}
+nav button.on{color:var(--pri);box-shadow:inset 0 3px var(--acc)}
+.bar{height:10px;background:var(--line);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}
+.tag{font-size:12px;background:var(--line);padding:2px 8px;border-radius:20px}
+.big{font-size:34px;font-weight:800;line-height:1.1}
+.fb{border-left:4px solid var(--acc);padding:6px 10px;margin:6px 0;background:var(--bg);border-radius:6px;font-size:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.focus{position:fixed;inset:0;background:var(--pri);color:#fff;z-index:9;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;text-align:center}
+.focus .big{font-size:64px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<nav><div id="nav"></div></nav>
+<script>
+// ===== Données (programme officiel modélisé : Pays > Système > Classe > Matière > Chapitre > Leçon) =====
+const CURR={pays:"Cameroun",systeme:"Francophone",classe:"Terminale C",
+matieres:{
+"Mathématiques":{chap:{"Suites numériques":["Suite arithmétique : Un+1 − Un = r constant. Terme général : Un = U0 + n·r.","Suite géométrique : Un+1 = q·Un. Terme général : Un = U0·qⁿ.","Limites de suites : une suite croissante et majorée converge."]}},
+"Physique":{chap:{"Mécanique":["2e loi de Newton : ΣF = m·a.","Chute libre : a = g ≈ 9,8 m/s², vitesse v = g·t."]}},
+"SVT":{chap:{"Génétique":["L'ADN porte l'information génétique sous forme de gènes.","Méiose : 1 cellule diploïde donne 4 cellules haploïdes."]}}}};
+const QS=[
+{id:1,m:"Mathématiques",d:1,q:"Pour prouver qu'une suite (Un) est arithmétique, on montre que…",o:["Un+1 − Un est constant","Un+1 / Un est constant","Un est croissante","Un est bornée"],a:0,err:"Vous avez confondu avec la suite géométrique ou une simple propriété de variation.",rap:"Une suite est arithmétique si Un+1 − Un = r, constant.",met:"Calculez Un+1 − Un et simplifiez : si le résultat ne dépend pas de n, c'est gagné.",n:"Définition d'une suite arithmétique"},
+{id:2,m:"Mathématiques",d:2,q:"Un = 3 + 4n. Quelle est la raison ?",o:["3","4","7","1/4"],a:1,err:"3 est le premier terme, pas la raison.",rap:"Dans Un = U0 + n·r, r est le coefficient de n.",met:"Repérez le coefficient de n dans la forme explicite.",n:"Raison d'une suite arithmétique"},
+{id:3,m:"Mathématiques",d:3,q:"Suite géométrique de premier terme 2 et de raison 3. Que vaut U3 ?",o:["18","54","11","27"],a:1,err:"U3 = 2·3³ = 54 ; 18 correspond à U2.",rap:"Un = U0·qⁿ.",met:"Substituez n et calculez la puissance avant de multiplier.",n:"Terme général géométrique"},
+{id:4,m:"Physique",d:1,q:"Selon la 2e loi de Newton, ΣF vaut…",o:["m/a","m·a","m+a","a/m"],a:1,err:"Vérifiez l'unité : N = kg·m/s².",rap:"ΣF = m·a.",met:"Isolez le système, listez les forces, appliquez ΣF = m·a.",n:"2e loi de Newton"},
+{id:5,m:"Physique",d:2,q:"En chute libre, l'accélération est environ…",o:["0 m/s²","1 m/s²","9,8 m/s²","98 m/s²"],a:2,err:"Il s'agit de l'intensité de la pesanteur g.",rap:"En chute libre, a = g ≈ 9,8 m/s².",met:"Négligez les frottements, puis v = g·t.",n:"Chute libre"},
+{id:6,m:"SVT",d:1,q:"La méiose produit à partir d'une cellule diploïde…",o:["2 cellules diploïdes","4 cellules haploïdes","1 cellule haploïde","2 cellules haploïdes"],a:1,err:"La mitose donne 2 cellules identiques ; la méiose en donne 4.",rap:"Méiose : 2 divisions, 4 cellules haploïdes.",met:"Retenez : réduction du nombre de chromosomes de 2n à n.",n:"Méiose"},
+{id:7,m:"SVT",d:2,q:"L'information génétique est portée par…",o:["Les protéines","L'ADN","Les lipides","L'eau"],a:1,err:"Les protéines sont le produit de l'expression des gènes.",rap:"L'ADN porte les gènes.",met:"Gène → ARN → protéine.",n:"ADN et gènes"}];
+const EPR=[
+{id:1,t:"Baccalauréat C – Maths",v:"Yaoundé",e:"Lycée Général Leclerc",a:2024,m:"Mathématiques",dur:10},
+{id:2,t:"Probatoire C – Physique",v:"Douala",e:"Lycée de New-Bell",a:2023,m:"Physique",dur:10},
+{id:3,t:"Baccalauréat D – SVT",v:"Yaoundé",e:"Lycée Bilingue de Mendong",a:2023,m:"SVT",dur:10},
+{id:4,t:"Concours blanc – Maths",v:"Bafoussam",e:"Collège Les Cèdres",a:2022,m:"Mathématiques",dur:10}];
+const PSEUDOS=[["Lion_Curieux",18],["Baobab_42",14],["Étoile_Nord",11],["Colibri_7",9]];
+
+// ===== État persistant (hors-ligne via localStorage, protégé) =====
+let S={stats:{},box:{},days:[],off:[],fiches:[],votes:{},theme:null,hist:[]};
+try{const r=localStorage.getItem("sf");if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem("sf",JSON.stringify(S))}catch(e){}};
+const today=()=>new Date().toISOString().slice(0,10);
+if(S.theme)document.documentElement.dataset.theme=S.theme;
+let tab="home",qs=null,ex=null,timer=null,subj="Mathématiques",ocr="";
+const $=s=>document.querySelector(s);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+// ===== Algorithmes =====
+function streak(){let n=0,d=new Date();while(S.days.includes(d.toISOString().slice(0,10))){n++;d.setDate(d.getDate()-1)}
+ if(!n){d=new Date();d.setDate(d.getDate()-1);while(S.days.includes(d.toISOString().slice(0,10))){n++;d.setDate(d.getDate()-1)}}return n}
+function mastery(m){const h=S.hist.filter(x=>!m||x.m===m);if(!h.length)return 0;
+ const num=h.reduce((s,x)=>s+x.ok*x.d,0),den=h.reduce((s,x)=>s+x.d,0);
+ const facteur=Math.min(1+streak()*0.02,1.2);return Math.min(100,Math.round(num/den*100*facteur))}
+// Répétition espacée (Leitner) : boîte 0 = échec, intervalle croissant
+const INT=[0,1,3,7,14];
+function due(q){const b=S.box[q.id];return !b||b.d<=today()}
+function nextQ(m){const pool=QS.filter(q=>q.m===m&&due(q));
+ pool.sort((a,b)=>(S.box[a.id]?.b??-1)-(S.box[b.id]?.b??-1));return pool[0]||null}
+function record(q,ok){const b=Math.min(ok?(S.box[q.id]?.b??0)+1:0,4);const d=new Date();d.setDate(d.getDate()+INT[b]);
+ S.box[q.id]={b,d:d.toISOString().slice(0,10)};S.hist.push({m:q.m,d:q.d,ok:ok?1:0});
+ if(!S.days.includes(today()))S.days.push(today());save()}
+
+// ===== Vues =====
+const TABS=[["home","🏠","Accueil"],["cours","📚","Cours"],["quiz","🎯","Quiz"],["epr","⏱️","Épreuves"],["imp","📷","Fiches"],["dash","📈","Progrès"]];
+function render(){
+ $("#nav").innerHTML=TABS.map(t=>`<button class="${tab===t[0]?"on":""}" onclick="go('${t[0]}')"><div style="display:block;font-size:18px">${t[1]}</div>${t[2]}</button>`).join("");
+ const V={home,cours,quiz,epr,imp,dash}[tab]();
+ $("#app").innerHTML=`<header><div class="logo">Smart<b>Friend</b></div><div class="row"><span class="tag">${navigator.onLine?"En ligne":"Hors-ligne"}</span><button class="g" onclick="theme()" aria-label="Changer de thème">🌓</button></div></header>`+V}
+function go(t){tab=t;if(t==="quiz")qs=null;render();scrollTo(0,0)}
+function theme(){const d=document.documentElement.dataset.theme==="dark"||(!document.documentElement.dataset.theme&&matchMedia("(prefers-color-scheme:dark)").matches);
+ S.theme=d?"light":"dark";document.documentElement.dataset.theme=S.theme;save()}
+addEventListener("online",render);addEventListener("offline",render);
+
+function home(){const s=streak();return `<div class="card"><div class="mut">${CURR.pays} · ${CURR.systeme} · ${CURR.classe}</div>
+<h2 style="margin-top:4px">Salut ! On révise quoi aujourd'hui ?</h2>
+<div class="grid"><div><div class="big">${s}🔥</div><div class="mut">jours d'affilée</div></div><div><div class="big">${mastery()}%</div><div class="mut">indice de maîtrise</div></div></div></div>
+<h2>Reprendre</h2>
+${Object.keys(CURR.matieres).map(m=>`<div class="card row sp"><div><h3>${m}</h3><div class="mut">${QS.filter(q=>q.m===m&&due(q)).length} question(s) à réviser</div></div><button onclick="subj='${m}';go('quiz')">S'entraîner</button></div>`).join("")}
+<div class="card mut">Les notions réussies reviennent de plus en plus tard ; celles ratées reviennent dès demain.</div>`}
+
+function cours(){let h="<h2>Cours</h2>";
+ for(const[m,o]of Object.entries(CURR.matieres))for(const[c,ls]of Object.entries(o.chap)){const k=m+c,off=S.off.includes(k);
+ h+=`<div class="card"><div class="row sp"><div><h3>${c}</h3><div class="mut">${m} · ${ls.length} leçons</div></div>
+ <button class="${off?"g":"o"}" onclick="dl('${k}')">${off?"✓ Téléchargé":"Télécharger"}</button></div>
+ <details style="margin-top:8px"><summary>Lire</summary>${ls.map((l,i)=>`<p><b>Leçon ${i+1}.</b> ${esc(l)}</p>`).join("")}
+ <textarea rows="2" placeholder="Mes notes…" oninput="note('${k}',this.value)">${esc(S.stats["n"+k]||"")}</textarea></details></div>`}
+ return h}
+function dl(k){S.off=S.off.includes(k)?S.off.filter(x=>x!==k):[...S.off,k];save();render()}
+function note(k,v){S.stats["n"+k]=v;save()}
+
+function quiz(){
+ const tabs=`<div class="row">${Object.keys(CURR.matieres).map(m=>`<button class="${m===subj?"":"g"}" onclick="subj='${m}';qs=null;render()">${m}</button>`).join("")}</div>`;
+ if(!qs)qs={q:nextQ(subj),done:null};
+ if(!qs.q)return tabs+`<div class="card"><h3>Tout est à jour 🎉</h3><p class="mut">Aucune question à réviser en ${subj} pour l'instant. Reviens demain : l'algorithme te réinjectera les notions à consolider.</p></div>`;
+ const q=qs.q;
+ return tabs+`<div class="card"><div class="row sp"><span class="tag">Difficulté ${"★".repeat(q.d)}</span><span class="tag">${q.n}</span></div>
+<h3 style="margin:10px 0">${esc(q.q)}</h3>`+q.o.map((o,i)=>`<button class="opt ${qs.done!==null?(i===q.a?"ok":i===qs.done?"ko":""):""}" ${qs.done!==null?"disabled":""} onclick="ans(${i})">${esc(o)}</button>`).join("")+
+ (qs.done!==null?`<div style="margin-top:10px">${qs.done!==q.a?`<div class="fb"><b>Erreur commise.</b> ${q.err}</div>`:`<div class="fb"><b>Bravo !</b> Bonne réponse.</div>`}
+ <div class="fb"><b>Rappel de cours.</b> ${q.rap}</div><div class="fb"><b>Méthode conseillée.</b> ${q.met}</div>
+ <button onclick="qs=null;render()" style="margin-top:8px">Question suivante</button></div>`:"")+`</div>`}
+function ans(i){qs.done=i;record(qs.q,i===qs.q.a);render()}
+
+function epr(){
+ if(ex)return examView();
+ const v=$("#fv")?.value||"",a=$("#fa")?.value||"";
+ const list=EPR.filter(e=>(!v||e.v===v)&&(!a||e.a==a));
+ return `<h2>Banque d'épreuves</h2><div class="grid"><select id="fv" onchange="render();$('#fv').value=this.value" aria-label="Ville"><option value="">Toutes les villes</option>${[...new Set(EPR.map(e=>e.v))].map(x=>`<option ${x===v?"selected":""}>${x}</option>`).join("")}</select>
+ <select id="fa" aria-label="Année"><option value="">Toutes les années</option>${[...new Set(EPR.map(e=>e.a))].map(x=>`<option ${x==a?"selected":""}>${x}</option>`).join("")}</select></div>
+ `+(list.map(e=>`<div class="card row sp"><div><h3>${e.t}</h3><div class="mut">${e.e} · ${e.v} · ${e.a}</div></div><button onclick="startEx(${e.id})">Mode chrono</button></div>`).join("")||`<div class="card mut">Aucune épreuve pour ces critères.</div>`)}
+document.addEventListener("change",e=>{if(e.target.id==="fa"||e.target.id==="fv"){const v=$("#fv").value,a=$("#fa").value;tab="epr";render();$("#fv").value=v;$("#fa").value=a;render2()}});
+function render2(){}
+function startEx(id){const e=EPR.find(x=>x.id===id);ex={e,qs:QS.filter(q=>q.m===e.m),i:0,ok:0,t:e.dur*60,end:false};
+ clearInterval(timer);timer=setInterval(()=>{ex.t--;if(ex.t<=0){clearInterval(timer);ex.end=true}const el=$("#clk");if(el)el.textContent=fmt(ex.t);if(ex.end)render()},1000);render()}
+const fmt=s=>String(Math.floor(s/60)).padStart(2,"0")+":"+String(s%60).padStart(2,"0");
+function examView(){const x=ex;
+ if(x.end||x.i>=x.qs.length){clearInterval(timer);const p=Math.round(x.ok/x.qs.length*20);
+  return `<div class="card"><h2>Épreuve terminée</h2><div class="big">${p}/20</div><p class="mut">${x.ok} bonne(s) réponse(s) sur ${x.qs.length}.</p><button onclick="ex=null;render()">Retour à la banque</button></div>`}
+ const q=x.qs[x.i];
+ return `<div class="focus" style="justify-content:flex-start;padding-top:40px"><div class="mut" style="color:#fff">Mode concentration : notifications masquées</div><div class="big" id="clk">${fmt(x.t)}</div>
+ <div style="background:var(--card);color:var(--ink);border-radius:14px;padding:14px;width:100%;max-width:560px;text-align:left"><b>Question ${x.i+1}/${x.qs.length}</b><p>${esc(q.q)}</p>
+ ${q.o.map((o,i)=>`<button class="opt" onclick="exAns(${i})">${esc(o)}</button>`).join("")}</div>
+ <button class="g" style="color:#fff" onclick="clearInterval(timer);ex=null;render()">Abandonner</button></div>`}
+function exAns(i){const q=ex.qs[ex.i];if(i===q.a)ex.ok++;record(q,i===q.a);ex.i++;render()}
+
+function imp(){return `<h2>Fiches partagées</h2>
+<div class="card"><h3>Importer une fiche</h3><p class="mut">Photo, image ou fichier texte. L'extraction automatique du texte (OCR) se fait côté serveur dans la version finale ; ici, relis et complète le texte pour l'indexer.</p>
+<input type="file" accept="image/*,.txt" onchange="pick(this)" aria-label="Fichier"><div id="pv"></div>
+<textarea id="ft" rows="4" placeholder="Texte de la fiche (titre en 1re ligne)">${esc(ocr)}</textarea>
+<div class="row" style="margin-top:8px"><select id="fm" style="width:auto">${Object.keys(CURR.matieres).map(m=>`<option>${m}</option>`).join("")}</select><button onclick="addF()">Publier</button></div></div>
+<input id="fs" placeholder="Rechercher dans les fiches…" oninput="srch(this.value)">
+<div id="fl">${fl("")}</div>`}
+function fl(q){const L=S.fiches.filter(f=>(f.t+f.x).toLowerCase().includes(q.toLowerCase()));
+ return L.map(f=>{const v=S.votes[f.id]||0;return `<div class="card"><div class="row sp"><h3>${esc(f.t)}</h3><span class="tag">${f.m}</span></div><p class="mut">${esc(f.x.slice(0,160))}</p>
+ <div class="row"><button class="g" onclick="vote(${f.id},1)">👍 ${f.u+(v===1)}</button><button class="g" onclick="vote(${f.id},-1)">👎 ${f.d+(v===-1)}</button><button class="g" onclick="flag(${f.id})">Signaler</button></div></div>`}).join("")||`<div class="card mut">Aucune fiche. Importe la première !</div>`}
+function srch(v){$("#fl").innerHTML=fl(v)}
+function pick(el){const f=el.files[0];if(!f)return;
+ if(f.type.startsWith("image/")){const u=URL.createObjectURL(f);$("#pv").innerHTML=`<img src="${u}" alt="Aperçu" style="max-width:100%;border-radius:10px;margin:8px 0">`}
+ else{const r=new FileReader();r.onload=()=>{ocr=r.result;$("#ft").value=ocr};r.readAsText(f)}}
+const EDU=/(le|la|les|un|une|des|est|sont|de|du|et|pour|que|si|suite|loi|force|cellule|théorème|formule)/i;
+function addF(){const t=$("#ft").value.trim();if(t.length<20)return alert("Ajoute au moins 20 caractères de contenu.");
+ if(!EDU.test(t))return alert("Ce contenu ne semble pas éducatif. Vérifie le texte.");
+ const[l,...r]=t.split("\n");S.fiches.unshift({id:Date.now(),t:l.slice(0,60),x:r.join(" ")||t,m:$("#fm").value,u:0,d:0});ocr="";save();render()}
+function vote(id,v){S.votes[id]=S.votes[id]===v?0:v;save();render()}
+function flag(id){if(confirm("Signaler cette fiche aux modérateurs ?")){S.fiches=S.fiches.filter(f=>f.id!==id);save();render()}}
+
+function dash(){const ms=Object.keys(CURR.matieres),me=mastery();
+ return `<h2>Tableau de bord</h2><div class="grid"><div class="card"><div class="big">${streak()}🔥</div><div class="mut">série en cours</div></div><div class="card"><div class="big">${me}</div><div class="mut">indice de maîtrise /100</div></div></div>
+ <div class="card"><h3>Par matière</h3>${ms.map(m=>`<div style="margin:8px 0"><div class="row sp"><span>${m}</span><b>${mastery(m)}%</b></div><div class="bar"><i style="width:${mastery(m)}%"></i></div></div>`).join("")}</div>
+ <div class="card"><h3>À réviser en priorité</h3>${(()=>{const w=ms.filter(m=>S.hist.some(h=>h.m===m)).sort((a,b)=>mastery(a)-mastery(b));return w.length?w.map(m=>`<div class="fb">${m} — ${QS.filter(q=>q.m===m&&S.box[q.id]?.b===0).map(q=>q.n).join(", ")||"continue ainsi"}</div>`).join(""):'<p class="mut">Réponds à quelques questions pour obtenir des recommandations.</p>'})()}</div>
+ <div class="card"><h3>Classement de progression</h3><p class="mut">Pseudonymes uniquement. Seul le gain de points sur la semaine compte, pas le niveau brut.</p>
+ ${[...PSEUDOS,["Toi",Math.min(S.hist.length*2,30)]].sort((a,b)=>b[1]-a[1]).map((p,i)=>`<div class="row sp" style="padding:4px 0"><span>${i+1}. ${p[0]}</span><b>+${p[1]} pts</b></div>`).join("")}</div>
+ <p class="mut" style="font-size:12px">Indice = Σ(score × difficulté) ÷ Σ difficultés × facteur de régularité (jusqu'à ×1,2).</p>
+ <button class="g" onclick="if(confirm('Effacer toute ma progression ?')){S={stats:{},box:{},days:[],off:[],fiches:[],votes:{},theme:S.theme,hist:[]};save();render()}">Réinitialiser mes données</button>`}
+render();
+</script>
+</body>
+</html>
